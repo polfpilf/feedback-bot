@@ -4,25 +4,30 @@ from functools import cache
 from aiogram import types
 
 from feedback_bot.config import settings
+from feedback_bot.model.admin import AuthenticationFailedException
+from feedback_bot.repositories.admin import InMemoryAdminRepository
+from feedback_bot import services
 
 
-def get_token_hash(token: str) -> str:
-    return hashlib.sha256(token.encode()).hexdigest()
-
-
-@cache
-def get_auth_token_hash():
-    return get_token_hash(settings.ADMIN_TOKEN)
+admin_repository = InMemoryAdminRepository()
 
 
 async def authenticate_admin(message: types.Message):
-    auth_token = message.get_args()
-    if not auth_token:
+    token = message.get_args()
+    if not token:
         await message.reply("Auth token is required")
         return
 
-    if get_token_hash(auth_token) != get_auth_token_hash():
-        await message.reply("Auth token is invalid")
-        return
-    
-    await message.reply("Auth token is verified!")
+    reply_msg: str
+    try:
+        services.authenticate_admin(
+            user_id=message.from_user.id,
+            token=token,
+            admin_repository=admin_repository,
+        )
+    except AuthenticationFailedException as e:
+        reply_msg = str(e)
+    else:
+        reply_msg = "Auth token is verified"
+
+    await message.reply(reply_msg)
