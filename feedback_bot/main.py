@@ -1,11 +1,14 @@
 from aiogram import Bot, Dispatcher, executor
 
 from feedback_bot.config import settings
+from feedback_bot.handlers import authenticate_admin
 
 
 def create_dispatcher():
     bot = Bot(settings.TELEGRAM_BOT_TOKEN)
-    return Dispatcher(bot)
+    dp = Dispatcher(bot)
+    dp.register_message_handler(authenticate_admin, commands=["auth"])
+    return dp
 
 
 async def set_webhook(dp: Dispatcher):

@@ -16,5 +16,6 @@ settings = Dynaconf(
         Validator("TELEGRAM_WEBHOOK_HOST", must_exist=True, is_type_of=str, len_min=1),
         Validator("HOST", must_exist=True, is_type_of=str, len_min=1),
         Validator("PORT", must_exist=True, is_type_of=int, gt=1024, lt=65535),
+        Validator("ADMIN_TOKEN", must_exist=True, is_type_of=str, len_min=8),
     ]
 )
