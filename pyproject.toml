@@ -6,6 +6,9 @@ authors = ["polfpilf <polfpilf@protonmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
+aiogram = "~2.14.3"
+aiohttp = {extras = ["speedups"], version = "~3.7.4"}
+ujson = "~4.0.2"
 
 [tool.poetry.dev-dependencies]
 
