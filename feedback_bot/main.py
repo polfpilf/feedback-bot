@@ -1,13 +1,13 @@
 from aiogram import Bot, Dispatcher, executor
 
+from feedback_bot import handlers
 from feedback_bot.config import settings
-from feedback_bot.handlers import authenticate_admin
-
 
 def create_dispatcher():
     bot = Bot(settings.TELEGRAM_BOT_TOKEN)
     dp = Dispatcher(bot)
-    dp.register_message_handler(authenticate_admin, commands=["auth"])
+    dp.register_message_handler(handlers.authenticate_admin, commands=["auth"])
+    dp.register_my_chat_member_handler(handlers.update_group)
     return dp
 
 

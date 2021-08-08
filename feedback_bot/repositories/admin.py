@@ -10,6 +10,10 @@ class AbstractAdminRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def get_all(self) -> List[Admin]:
+        raise NotImplementedError
+
+    @abstractmethod
     def add(self, admin: Admin):
         raise NotImplementedError
 
@@ -26,6 +30,9 @@ class InMemoryAdminRepository(AbstractAdminRepository):
             ),
             None,
         )
+
+    def get_all(self):
+        return list(self.admins)
     
     def add(self, admin: Admin):
         self.admins.add(admin)
