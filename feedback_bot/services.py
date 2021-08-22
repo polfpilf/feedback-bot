@@ -39,7 +39,7 @@ def remove_group(group_chat_id: int, group_repository: AbstractGroupRepository):
     group_repository.remove(group)
 
 
-def get_admin_chats(admin_repository: AbstractAdminRepository) -> List[int]:
+def get_admin_ids(admin_repository: AbstractAdminRepository) -> List[int]:
     admins = admin_repository.get_all()
     return [a.user_id for a in admins]
 
