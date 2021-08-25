@@ -1,16 +1,24 @@
 import aiogram
 from dependency_injector.providers import (
-    Configuration, Dependency, Factory, Provider, Singleton, Resource
+    Configuration,
+    Factory,
+    Provider,
+    Resource,
+    Singleton,
 )
-from dependency_injector import providers, containers
+from dependency_injector.containers import DeclarativeContainer
 
-from feedback_bot.config import settings
 from feedback_bot.adapters import telegram
-from feedback_bot.database import init_connection_pool
+from feedback_bot.config import settings
 from feedback_bot.service_layer import unit_of_work
 
 
-class Container(containers.DeclarativeContainer):
+async def init_connection_pool(dsn: str):
+    async with asyncpg.create_pool(dsn=dsn) as pool:
+        yield pool
+
+
+class Container(DeclarativeContainer):
     config = Configuration(default=settings.as_dict())
 
     bot = Singleton(aiogram.Bot, config.TELEGRAM_BOT_TOKEN)

@@ -1,8 +1,6 @@
 from abc import abstractmethod, ABC
 from typing import Iterable, Optional, List, Dict
 
-import asyncpg
-
 from feedback_bot.model import Admin, TargetChat
 
 

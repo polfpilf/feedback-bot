@@ -2,10 +2,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional, Type, TypeVar
 
-from dependency_injector import providers
-
-from feedback_bot.bootstrap import Container
-
 
 T = TypeVar('T')
 
@@ -36,7 +32,7 @@ class Admin:
         user_id: int,
         chat_id: int,
         token: str,
-        admin_token: str = Provide[Container.config.ADMIN_TOKEN],
+        admin_token: str,
     ) -> Optional[T]:
         if token != admin_token:
             return None

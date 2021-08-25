@@ -20,10 +20,15 @@ async def authenticate_admin(
     chat_id: int,
     token: str,
     uow: AbstractUnitOfWork = Provide[Container.uow],
+    admin_token: str = Provide[Container.config.ADMIN_TOKEN],
 ):
-    print(uow)
     async with uow:
-        admin = Admin.authenticate(user_id=user_id, chat_id=chat_id, token=token)
+        admin = Admin.authenticate(
+            user_id=user_id,
+            chat_id=chat_id,
+            token=token,
+            admin_token=admin_token,
+        )
         if not admin:
             log.debug("User user_id: %d is not an admin", user_id)
             return
