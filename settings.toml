@@ -4,3 +4,4 @@ telegram_bot_token = "" # define in .secrets.toml
 telegram_webhook_host = "" # define in .secrets.toml
 telegram_webhook_path = "" # define in .secrets.toml
 admin_token = "" # define in .secrets.toml
+database_url = "" # define in .secrets.toml
