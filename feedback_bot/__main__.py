@@ -2,6 +2,7 @@ from dependency_injector import providers
 
 from feedback_bot import bootstrap
 from feedback_bot import bot
+from feedback_bot import model
 from feedback_bot.service_layer import services
 from feedback_bot.service_layer.unit_of_work import InMemoryUnitOfWork
 
@@ -24,6 +25,6 @@ if __name__ == "__main__":
         )
     )
 
-    container.wire(modules=[bot, services])
+    container.wire(modules=[bot, services, model])
 
     bot.start_bot()

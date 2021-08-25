@@ -2,7 +2,9 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional, Type, TypeVar
 
-from feedback_bot.config import settings
+from dependency_injector import providers
+
+from feedback_bot.bootstrap import Container
 
 
 T = TypeVar('T')
@@ -21,7 +23,7 @@ class TargetChat:
 @dataclass(frozen=True, eq=True)
 class Admin:
     user_id: int
-    target_chat: TargetChat
+    target_chat: TargetChat = field(hash=False, compare=False)
     created_at: datetime = field(
         default_factory=datetime.utcnow,
         hash=False,
@@ -29,8 +31,14 @@ class Admin:
     )
 
     @classmethod
-    def authenticate(cls: Type[T], user_id: int, chat_id: int, token: str) -> Optional[T]:
-        if token != settings.ADMIN_TOKEN:
+    def authenticate(
+        cls: Type[T],
+        user_id: int,
+        chat_id: int,
+        token: str,
+        admin_token: str = Provide[Container.config.ADMIN_TOKEN],
+    ) -> Optional[T]:
+        if token != admin_token:
             return None
 
         target_chat = TargetChat(chat_id=chat_id)
