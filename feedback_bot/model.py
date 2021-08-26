@@ -1,15 +1,20 @@
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Type, TypeVar
 
 T = TypeVar('T')
+
+
+def _utc_now():
+    """Return current UTC timezone-aware datetime"""
+    return datetime.now(timezone.utc)
 
 
 @dataclass(frozen=True, eq=True)
 class TargetChat:
     chat_id: int
     created_at: datetime = field(
-        default_factory=datetime.utcnow,
+        default_factory=_utc_now,
         hash=False,
         compare=False,
     )
@@ -19,11 +24,6 @@ class TargetChat:
 class Admin:
     user_id: int
     target_chat: TargetChat = field(hash=False, compare=False)
-    created_at: datetime = field(
-        default_factory=datetime.utcnow,
-        hash=False,
-        compare=False,
-    )
 
     @classmethod
     def authenticate(
