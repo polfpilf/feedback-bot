@@ -14,6 +14,8 @@ aiohttp = {extras = ["speedups"], version = "~3.7.4"}
 ujson = "~4.0.2"
 dynaconf = "~3.1.4"
 dependency-injector = "~4.35.2"
+alembic = "~1.6.5"
+psycopg2 = "~2.9.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "~6.2.4"
