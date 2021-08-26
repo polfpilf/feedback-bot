@@ -2,7 +2,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional, Type, TypeVar
 
-
 T = TypeVar('T')
 
 
@@ -45,4 +44,4 @@ class Admin:
 class ForwardedMessage:
     forwarded_message_id: int
     target_chat_id: int
-    origin_chat_id: int
+    origin_chat_id: int = field(hash=False, compare=False)

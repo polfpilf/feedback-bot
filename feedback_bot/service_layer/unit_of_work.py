@@ -36,41 +36,7 @@ class AbstractUnitOfWork(AbstractAsyncContextManager):
         raise NotImplementedError
 
 
-@dataclass(init=False)
-class InMemoryUnitOfWork(AbstractUnitOfWork):
-    commited: bool
-    rolled_back: bool
 
-    _admins: Dict
-    _target_chats: Dict
-    _forwarded_messages: Dict    
-
-    def __init__(
-        self,
-        bot: Bot,
-        admins: Dict[int, Admin],
-        target_chats: Dict[int, TargetChat],
-        forwarded_messages: Dict[Tuple[int, int], ForwardedMessage],
-    ):
-        self.rolled_back = False
-        self.commited = False
-
-        self._admins = admins
-        self._target_chats = target_chats
-        self._forwarded_messages = forwarded_messages
-
-        self.telegram_api = telegram.TelegramAPI(bot)
-        self.admin_repository = admin_repository.InMemoryAdminRepository(admins=admins, target_chats=target_chats)
-        self.target_chat_repository = target_chat_repository.InMemoryTargetChatRepository(target_chats=target_chats)
-        self.forwarded_message_repository = forwarded_message_repository.InMemoryForwardedMessageRepository(
-            forwarded_messages=forwarded_messages
-        )
-    
-    async def rollback(self):
-        self.rolled_back = True
-
-    async def commit(self):
-        self.commited = True
 
 
 class PostgresUnitOfWork(AbstractUnitOfWork):
