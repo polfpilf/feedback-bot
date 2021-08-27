@@ -4,6 +4,7 @@ import asyncpg
 import pytest
 
 from feedback_bot.adapters.repositories.admin import PostgresAdminRepository
+from feedback_bot.adapters.repositories.target_chat import PostgresTargetChatRepository
 from feedback_bot.model import Admin, TargetChat
 
 
@@ -114,3 +115,91 @@ class TestPostgresAdminRepository:
         )
         assert admin_row["user_id"] == admin.user_id
         assert admin_row["target_chat_id"] == admin.target_chat.chat_id
+
+
+class TestPostgresTargetChatRepository:
+    @pytest.mark.asyncio
+    async def test_target_chat_repository_get_latest(
+        self, db_connection: asyncpg.Connection
+    ):
+        latest_chat_id = 42
+        latest_created_at = datetime(2021, 1, 1, tzinfo=timezone.utc)
+        await db_connection.executemany(
+            """
+            INSERT INTO target_chat (chat_id, created_at)
+            VALUES ($1, $2)
+            """,
+            [
+                (latest_chat_id, latest_created_at),
+                (13, datetime(2020, 1, 2, tzinfo=timezone.utc)),
+                (37, datetime(2020, 1, 3, tzinfo=timezone.utc)),
+            ]
+        )
+
+        target_chat_repository = PostgresTargetChatRepository(db_connection)
+        latest_target_chat = await target_chat_repository.get_latest()
+
+        assert latest_target_chat.chat_id == latest_chat_id
+        assert latest_target_chat.created_at == latest_created_at
+
+    @pytest.mark.asyncio
+    async def test_target_chat_repository_get_latest_not_found(
+        self, db_connection: asyncpg.Connection
+    ):
+        target_chat_repository = PostgresTargetChatRepository(db_connection)
+        latest_target_chat = await target_chat_repository.get_latest()
+
+        assert latest_target_chat is None
+    
+    @pytest.mark.asyncio
+    async def test_target_chat_repository_remove(
+        self, db_connection: asyncpg.Connection
+    ):
+        target_chat_id = 42
+        target_chat_created_at = datetime(2021, 1, 1, tzinfo=timezone.utc)
+
+        await db_connection.execute(
+            """
+            INSERT INTO target_chat (chat_id, created_at)
+            VALUES ($1, $2)
+            """,
+            target_chat_id, target_chat_created_at
+        )
+
+        target_chat_repository = PostgresTargetChatRepository(db_connection)
+        removed_target_chat = await target_chat_repository.remove(target_chat_id)
+
+        assert removed_target_chat.chat_id == target_chat_id
+        assert removed_target_chat.created_at == target_chat_created_at
+
+    @pytest.mark.asyncio
+    async def test_target_chat_repository_remove_not_found(
+        self, db_connection: asyncpg.Connection
+    ):
+        target_chat_repository = PostgresTargetChatRepository(db_connection)
+        removed_target_chat = await target_chat_repository.remove(42)
+
+        assert removed_target_chat is None
+
+    @pytest.mark.asyncio
+    async def test_target_chat_repository_add(self, db_connection: asyncpg.Connection):
+        target_chat = TargetChat(
+            chat_id=42,
+            created_at=datetime(2021, 1, 1, tzinfo=timezone.utc),
+        )
+        
+        target_chat_repository = PostgresTargetChatRepository(db_connection)
+        await target_chat_repository.add(target_chat)
+
+        target_chat_row = await db_connection.fetchrow(
+            """
+            SELECT
+                chat_id, created_at
+            FROM
+                target_chat
+            WHERE chat_id = $1
+            """,
+            target_chat.chat_id
+        )
+        assert target_chat_row["chat_id"] == target_chat.chat_id
+        assert target_chat_row["created_at"] == target_chat.created_at
