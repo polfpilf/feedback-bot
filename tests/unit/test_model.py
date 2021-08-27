@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 import pytest
 
 from feedback_bot.model import Admin, ForwardedMessage, TargetChat
@@ -5,14 +7,16 @@ from feedback_bot.model import Admin, ForwardedMessage, TargetChat
 
 class TestTargetChat:
     def test_target_chat_eq(self):
-        target_chat_1 = TargetChat(chat_id=42)
-        target_chat_2 = TargetChat(chat_id=42)
+        created_at = datetime(2021, 1, 1, tzinfo=timezone.utc)
+        target_chat_1 = TargetChat(chat_id=42, created_at=created_at)
+        target_chat_2 = TargetChat(chat_id=42, created_at=created_at)
 
         assert target_chat_1 == target_chat_2
 
     def test_target_chat_neq(self):
-        target_chat_1 = TargetChat(chat_id=13)
-        target_chat_2 = TargetChat(chat_id=37)
+        created_at = datetime(2021, 1, 1, tzinfo=timezone.utc)
+        target_chat_1 = TargetChat(chat_id=13, created_at=created_at)
+        target_chat_2 = TargetChat(chat_id=37, created_at=created_at)
 
         assert target_chat_1 != target_chat_2
 

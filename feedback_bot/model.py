@@ -13,17 +13,13 @@ def _utc_now():
 @dataclass(frozen=True, eq=True)
 class TargetChat:
     chat_id: int
-    created_at: datetime = field(
-        default_factory=_utc_now,
-        hash=False,
-        compare=False,
-    )
+    created_at: datetime = field(default_factory=_utc_now)
 
 
 @dataclass(frozen=True, eq=True)
 class Admin:
     user_id: int
-    target_chat: TargetChat = field(hash=False, compare=False)
+    target_chat: TargetChat
 
     @classmethod
     def authenticate(

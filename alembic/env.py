@@ -4,15 +4,19 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+from alembic.config import Config
 
 from feedback_bot.config import settings 
 
 config = context.config
 fileConfig(config.config_file_name)
-
-config.set_main_option('sqlalchemy.url', settings.DATABASE_URL)
-
 target_metadata = None
+
+
+def _configure_db_url(cfg: Config):
+    preset_url = cfg.get_main_option("sqlalchemy.url")
+    if not preset_url:
+        cfg.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 
 def run_migrations_offline():
@@ -27,6 +31,8 @@ def run_migrations_offline():
     script output.
 
     """
+    _configure_db_url(config)
+
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
@@ -46,6 +52,8 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
+    _configure_db_url(config)
+
     connectable = engine_from_config(
         config.get_section(config.config_ini_section),
         prefix="sqlalchemy.",
