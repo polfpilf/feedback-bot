@@ -95,9 +95,16 @@ def create_dispatcher(bot: Bot):
     dp.register_message_handler(
         handle_auth_command, chat_type='private', commands=["auth"]
     )
-    dp.register_message_handler(handle_reply, is_reply=True)
     dp.register_message_handler(
-        handle_private_message, chat_type='private', is_reply=False
+        handle_reply,
+        is_reply=True,
+        content_types=types.ContentTypes.ANY,
+    )
+    dp.register_message_handler(
+        handle_private_message,
+        chat_type='private',
+        is_reply=False,
+        content_types=types.ContentTypes.ANY,
     )
     
     return dp
