@@ -4,8 +4,11 @@ import asyncpg
 import pytest
 
 from feedback_bot.adapters.repositories.admin import PostgresAdminRepository
+from feedback_bot.adapters.repositories.forwarded_message import (
+    PostgresForwardedMessageRepository
+)
 from feedback_bot.adapters.repositories.target_chat import PostgresTargetChatRepository
-from feedback_bot.model import Admin, TargetChat
+from feedback_bot.model import Admin, ForwardedMessage, TargetChat
 
 
 class TestPostgresAdminRepository:
@@ -203,3 +206,93 @@ class TestPostgresTargetChatRepository:
         )
         assert target_chat_row["chat_id"] == target_chat.chat_id
         assert target_chat_row["created_at"] == target_chat.created_at
+
+
+class TestPostgresForwardedMessageRepository:
+    @pytest.mark.asyncio
+    async def test_forwarded_message_repository_get(
+        self, db_connection: asyncpg.Connection
+    ):
+        forwarded_message_id = 42
+        target_chat_id = 24
+        origin_chat_id = 13
+
+        await db_connection.executemany(
+            """
+            INSERT INTO forwarded_message
+                (forwarded_message_id, target_chat_id, origin_chat_id)
+            VALUES ($1, $2, $3)
+            """,
+            [
+                (13, 37, 20),
+                (forwarded_message_id, target_chat_id, origin_chat_id),
+                (42, 42, 42),
+            ]
+        )
+
+        forwarded_message_repository = PostgresForwardedMessageRepository(
+            db_connection
+        )
+        forwarded_message = await forwarded_message_repository.get(
+            forwarded_message_id=forwarded_message_id,
+            target_chat_id=target_chat_id,
+        )
+
+        assert forwarded_message.forwarded_message_id == forwarded_message_id
+        assert forwarded_message.target_chat_id == target_chat_id
+        assert forwarded_message.origin_chat_id == origin_chat_id
+
+    @pytest.mark.asyncio
+    async def test_forwarded_message_repository_get_not_found(
+        self, db_connection: asyncpg.Connection
+    ):
+        forwarded_message_repository = PostgresForwardedMessageRepository(
+            db_connection
+        )
+        forwarded_message = await forwarded_message_repository.get(
+            forwarded_message_id=42,
+            target_chat_id=24,
+        )
+
+        assert forwarded_message is None
+    
+    @pytest.mark.asyncio
+    async def test_forwarded_message_repository_add(
+        self, db_connection: asyncpg.Connection
+    ):
+        forwarded_message = ForwardedMessage(
+            forwarded_message_id=13, target_chat_id=37, origin_chat_id=42
+        )
+
+        forwarded_message_repository = PostgresForwardedMessageRepository(
+            db_connection
+        )
+        await forwarded_message_repository.add(forwarded_message)
+
+        forwarded_message_row = await db_connection.fetchrow(
+            """
+            SELECT
+                forwarded_message_id,
+                target_chat_id,
+                origin_chat_id
+            FROM
+                forwarded_message
+            WHERE
+                forwarded_message_id = $1
+                AND target_chat_id = $2
+            """,
+            forwarded_message.forwarded_message_id,
+            forwarded_message.target_chat_id,
+        )
+        assert (
+            forwarded_message_row["forwarded_message_id"]
+            == forwarded_message.forwarded_message_id
+        )
+        assert (
+            forwarded_message_row["target_chat_id"]
+            == forwarded_message.target_chat_id
+        )
+        assert (
+            forwarded_message_row["origin_chat_id"]
+            == forwarded_message.origin_chat_id
+        )
