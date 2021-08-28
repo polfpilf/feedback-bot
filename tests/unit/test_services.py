@@ -131,8 +131,6 @@ class InMemoryUnitOfWork(AbstractUnitOfWork):
         target_chats: Dict[int, TargetChat],
         forwarded_messages: Dict[Tuple[int, int], ForwardedMessage],
     ):
-        super().__init__()
-
         self.commited = False
         self.rolled_back = False
 

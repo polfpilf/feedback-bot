@@ -21,37 +21,25 @@ class AbstractUnitOfWork(AbstractAsyncContextManager):
     forwarded_messages: forwarded_message_repository.AbstractForwardedMessageRepository
     telegram_api: telegram.AbstractTelegramAPI
 
-    _rolled_back: bool
-    _committed: bool
-
-    def __init__(self):
-        self._rolled_back = False
-        self._committed = False
-
     async def __aenter__(self):
         return self
     
     async def __aexit__(self, *args):
-        if self._rolled_back or self._committed:
-            return
+         await self.rollback()
 
-        await self.rollback()
+    async def rollback(self):
+        await self._rollback()
+
+    async def commit(self):
+        await self._commit()
 
     @abstractmethod
     async def _rollback(self):
         raise NotImplementedError
 
-    async def rollback(self):
-        self._rolled_back = True
-        await self._rollback()
-
     @abstractmethod
     async def _commit(self):
         raise NotImplementedError
-
-    async def commit(self):
-        self._committed = True
-        await self._commit()
 
 
 class PostgresUnitOfWork(AbstractUnitOfWork):
@@ -63,10 +51,11 @@ class PostgresUnitOfWork(AbstractUnitOfWork):
     _rolled_back: bool
 
     def __init__(self, bot: aiogram.Bot, pool: asyncpg.Pool):
-        super().__init__()
-
         self.telegram_api = telegram.TelegramAPI(bot)
         self._pool = pool
+
+        self._committed = False
+        self._rolled_back = False
 
     async def __aenter__(self):
         self._conn = await self._pool.acquire()
@@ -87,6 +76,11 @@ class PostgresUnitOfWork(AbstractUnitOfWork):
 
     async def _commit(self):
         await self._transaction.commit()
+        self._committed = True
 
     async def _rollback(self):
+        if self._committed or self._rolled_back:
+            return
+    
         await self._transaction.rollback()
+        self._rolled_back = True
