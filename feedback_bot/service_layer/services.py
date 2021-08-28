@@ -152,6 +152,12 @@ async def process_reply(
                 to_chat_id=forwarded_message.origin_chat_id,
                 message_id=message_id,
             )
+            return
+        
+        is_target_chat = await uow.target_chats.get(chat_id)
+        if is_target_chat:
+            return
+
         else:
             await _forward_message_to_target_chat(
                 from_chat_id=chat_id,

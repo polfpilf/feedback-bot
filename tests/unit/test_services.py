@@ -172,9 +172,11 @@ def mock_admin_token(container):
 
 class TestAuthenticateAdmin:
     @pytest.mark.asyncio
-    async def test_authenticate_admin_failure(
+    async def test_authenticate_admin_wrong_password_no_admin_created(
         self, mock_uow: InMemoryUnitOfWork, mock_admin_token: str,
     ):
+        """Admin should not be created if provided password is wrong."""
+    
         user_id = 42
         token = "spam"
         
@@ -185,9 +187,11 @@ class TestAuthenticateAdmin:
         assert not mock_uow.telegram_api.sent_messages
 
     @pytest.mark.asyncio
-    async def test_authenticate_admin_success(
+    async def test_authenticate_admin_correct_password_admin_created(
         self, mock_uow: InMemoryUnitOfWork, mock_admin_token: str,
     ):
+        """Admin should be created if provided password is correct."""
+    
         user_id = 42
         chat_id = 13
         token = mock_admin_token
@@ -207,9 +211,11 @@ class TestAuthenticateAdmin:
         ]
 
     @pytest.mark.asyncio
-    async def test_authenticate_admin_already_authenticated(
+    async def test_authenticate_admin_already_authenticated_ignored(
         self, mock_uow: InMemoryUnitOfWork
     ):
+        """If Admin already exists, ignore the command."""
+
         target_chat = TargetChat(chat_id=13)
         admin = Admin(user_id=37, target_chat=target_chat)
         await mock_uow.admins.add(admin)
@@ -228,9 +234,10 @@ class TestAuthenticateAdmin:
 
 class TestAddGroup:
     @pytest.mark.asyncio
-    async def test_add_group_no_admins(self, mock_uow: InMemoryUnitOfWork):
-        group_chat_id = 1337
+    async def test_add_group_no_admins_ignored(self, mock_uow: InMemoryUnitOfWork):
+        """If no Admins exist, adding bot to a group should be ignored."""
 
+        group_chat_id = 1337
         await services.add_group(by_user_id=42, group_chat_id=group_chat_id)
 
         target_chat = await mock_uow.target_chats.get(group_chat_id)
@@ -238,7 +245,9 @@ class TestAddGroup:
         assert not mock_uow.telegram_api.sent_messages
 
     @pytest.mark.asyncio
-    async def test_add_group_not_admin(self, mock_uow: InMemoryUnitOfWork):
+    async def test_add_group_not_admin_ignored(self, mock_uow: InMemoryUnitOfWork):
+        """Adding bot to a group by non-Admin should be ignored."""
+        
         group_chat_id = 1337
         added_by_user_id = 13
         admin = Admin(user_id=37, target_chat=TargetChat(chat_id=42))
@@ -251,7 +260,9 @@ class TestAddGroup:
         assert not mock_uow.telegram_api.sent_messages
 
     @pytest.mark.asyncio
-    async def test_add_group_success(self, mock_uow: InMemoryUnitOfWork):
+    async def test_add_group_by_admin_save_target_chat(self, mock_uow: InMemoryUnitOfWork):
+        """Adding bot to a group by Admin should create a TargetChat for the group."""
+
         group_chat_id = 1337
         added_by_user_id = 13
 
@@ -277,7 +288,11 @@ class TestAddGroup:
 
 class TestRemoveGroup:
     @pytest.mark.asyncio
-    async def test_remove_group_non_existent(self, mock_uow: InMemoryUnitOfWork):
+    async def test_remove_group_non_existent_ignored(self, mock_uow: InMemoryUnitOfWork):
+        """Removing bot from group for which there is no TargetChat
+        should be ignored.
+        """
+
         removed_group_chat_id = 13
 
         existing_target_chat = TargetChat(chat_id=37)
@@ -293,7 +308,11 @@ class TestRemoveGroup:
         assert not mock_uow.telegram_api.sent_messages
 
     @pytest.mark.asyncio
-    async def test_remove_group_success(self, mock_uow: InMemoryUnitOfWork):
+    async def test_remove_group_existing_target_chat_removed(self, mock_uow: InMemoryUnitOfWork):
+        """Removing bot from a TargetChat-group
+        should remove the group's TargetChat.
+        """
+    
         removed_group_chat_id = 13
         existing_target_chat = TargetChat(chat_id=removed_group_chat_id)
         await mock_uow.target_chats.add(existing_target_chat)
@@ -322,9 +341,11 @@ class TestRemoveGroup:
 
 class TestProcessPrivateMessage:
     @pytest.mark.asyncio
-    async def test_process_private_message_no_target_chats(
+    async def test_process_private_message_no_target_chats_ignored(
         self, mock_uow: InMemoryUnitOfWork
     ):
+        """Private message should be ignored if there are no TargetChats."""
+
         await services.process_private_message(chat_id=13, message_id=37)
 
         assert not mock_uow.telegram_api.forwarded_messages
@@ -332,9 +353,11 @@ class TestProcessPrivateMessage:
         assert not messages
 
     @pytest.mark.asyncio
-    async def test_process_private_message_success(
+    async def test_process_private_message_forwarded_to_latest_target_chat(
         self, mock_uow: InMemoryUnitOfWork
     ):
+        """Private message should be forwarded to the latest TargetChat."""
+
         origin_chat_id = 42
         message_id = 24
 
@@ -372,9 +395,13 @@ class TestProcessPrivateMessage:
 
 class TestProcessReply:
     @pytest.mark.asyncio
-    async def test_process_reply_not_to_forwarded_message_is_forwarded(
+    async def test_process_reply_not_to_forwarded_message_non_target_chat_is_forwarded(
         self, mock_uow: InMemoryUnitOfWork
     ):
+        """Reply in non-TargetChats to non-ForwardedMessage
+        should be forwarded to the latest TargetChat.
+        """
+
         target_chat = TargetChat(chat_id=10)
         await mock_uow.target_chats.add(target_chat)
 
@@ -394,9 +421,11 @@ class TestProcessReply:
         ]
 
     @pytest.mark.asyncio
-    async def test_process_reply_not_to_forwarded_message_no_target_chats(
+    async def test_process_reply_not_to_forwarded_message_no_target_chats_ignored(
         self, mock_uow: InMemoryUnitOfWork
     ):
+        """Reply should be ignored if there are no TargetChats."""
+
         await services.process_reply(
             chat_id=13,
             reply_to_message_id=37,
@@ -407,7 +436,33 @@ class TestProcessReply:
         assert not mock_uow.telegram_api.forwarded_messages
 
     @pytest.mark.asyncio
-    async def test_process_reply_success(self, mock_uow: InMemoryUnitOfWork):
+    async def test_process_reply_not_to_forwarded_message_in_target_chat_ignored(
+        self, mock_uow: InMemoryUnitOfWork
+    ):
+        """Reply to non-ForwardedMessage in TargetChat should be ignored."""
+
+        target_chat = TargetChat(chat_id=42)
+        await mock_uow.target_chats.add(target_chat)
+
+        await services.process_reply(
+            chat_id=target_chat.chat_id,
+            reply_to_message_id=13,
+            message_id=37,
+        )
+
+        forwarded_messages = await mock_uow.forwarded_messages.get_all()
+        assert not forwarded_messages
+        assert not mock_uow.telegram_api.forwarded_messages
+        assert not mock_uow.telegram_api.copied_messages
+
+    @pytest.mark.asyncio
+    async def test_process_reply_to_forwarded_message_in_target_chat_copied(
+        self, mock_uow: InMemoryUnitOfWork
+    ):
+        """Reply to ForwardedMessage in TargetChat
+        should be copied to the ForwardedMessage's origin chat.
+        """
+
         target_chat_id = 37
         forwarded_message_id = 13
         origin_chat_id = 42

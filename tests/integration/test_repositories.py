@@ -122,6 +122,35 @@ class TestPostgresAdminRepository:
 
 class TestPostgresTargetChatRepository:
     @pytest.mark.asyncio
+    async def test_target_chat_repository_get(self, db_connection: asyncpg.Connection):
+        target_chat_id = 42
+        target_chat_created_at = datetime(2021, 1, 1, tzinfo=timezone.utc)
+        await db_connection.executemany(
+            """
+            INSERT INTO target_chat (chat_id, created_at)
+            VALUES ($1, $2)
+            """,
+            [
+                (target_chat_id, target_chat_created_at),
+                (13, datetime(2020, 1, 2, tzinfo=timezone.utc)),
+                (37, datetime(2020, 1, 3, tzinfo=timezone.utc)),
+            ]
+        )
+
+        target_chat_repository = PostgresTargetChatRepository(db_connection)
+        target_chat = await target_chat_repository.get(target_chat_id)
+
+        assert target_chat.chat_id == target_chat_id
+        assert target_chat.created_at == target_chat_created_at
+
+    @pytest.mark.asyncio
+    async def test_target_chat_repository_get_not_found(self, db_connection: asyncpg.Connection):
+        target_chat_repository = PostgresTargetChatRepository(db_connection)
+        target_chat = await target_chat_repository.get(42)
+
+        assert target_chat is None
+
+    @pytest.mark.asyncio
     async def test_target_chat_repository_get_latest(
         self, db_connection: asyncpg.Connection
     ):

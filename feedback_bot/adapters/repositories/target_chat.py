@@ -8,6 +8,10 @@ from feedback_bot.model import TargetChat
 
 class AbstractTargetChatRepository(ABC):
     @abstractmethod
+    async def get(self, chat_id: int) -> Optional[TargetChat]:
+        raise NotImplemented
+
+    @abstractmethod
     async def get_latest(self) -> Optional[TargetChat]:
         raise NotImplementedError
 
@@ -27,6 +31,24 @@ class PostgresTargetChatRepository(AbstractTargetChatRepository):
     @staticmethod
     def row_to_model(row: asyncpg.Record) -> TargetChat:
         return TargetChat(**row)
+
+    async def get(self, chat_id: int):
+        row = await self._conn.fetchrow(
+            """
+            SELECT
+                chat_id,
+                created_at
+            FROM
+                target_chat
+            WHERE
+                chat_id = $1
+            """,
+            chat_id
+        )
+        if not row:
+            return None
+        
+        return self.row_to_model(row)
 
     async def get_latest(self):
         row = await self._conn.fetchrow(
