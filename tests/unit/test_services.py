@@ -208,6 +208,25 @@ class TestAuthenticateAdmin:
             ),
         ]
 
+    @pytest.mark.asyncio
+    async def test_authenticate_admin_already_authenticated(
+        self, mock_uow: InMemoryUnitOfWork
+    ):
+        target_chat = TargetChat(chat_id=13)
+        admin = Admin(user_id=37, target_chat=target_chat)
+        await mock_uow.admins.add(admin)
+
+        await services.authenticate_admin(
+            user_id=admin.user_id,
+            chat_id=target_chat.chat_id,
+            token="spam",
+            admin_token="spam",
+        )
+
+        admin_after_auth = await mock_uow.admins.get(admin.user_id)
+        assert admin == admin_after_auth
+        assert not mock_uow.telegram_api.sent_messages
+
 
 class TestAddGroup:
     @pytest.mark.asyncio
@@ -303,32 +322,32 @@ class TestRemoveGroup:
         }
 
 
-class TestForwardIncomingMessage:
+class TestProcessPrivateMessage:
     @pytest.mark.asyncio
-    async def test_forward_incoming_message_no_target_chats(
+    async def test_process_private_message_no_target_chats(
         self, mock_uow: InMemoryUnitOfWork
     ):
-        await services.forward_incoming_message(origin_chat_id=13, message_id=37)
+        await services.process_private_message(chat_id=13, message_id=37)
 
         assert not mock_uow.telegram_api.forwarded_messages
         messages = await mock_uow.forwarded_messages.get_all()
         assert not messages
 
     @pytest.mark.asyncio
-    async def test_forward_incoming_message_success(
+    async def test_process_private_message_success(
         self, mock_uow: InMemoryUnitOfWork
     ):
         origin_chat_id = 42
         message_id = 24
-    
+
         # latest chat, should be selected as target
         target_chat_1 = TargetChat(chat_id=13, created_at=datetime(2021, 2, 2))
         target_chat_2 = TargetChat(chat_id=37, created_at=datetime(2020, 1, 1))
         await mock_uow.target_chats.add(target_chat_1)
         await mock_uow.target_chats.add(target_chat_2)
 
-        await services.forward_incoming_message(
-            origin_chat_id=origin_chat_id, message_id=message_id
+        await services.process_private_message(
+            chat_id=origin_chat_id, message_id=message_id
         )
 
         forwarded_message = await mock_uow.forwarded_messages.get(
@@ -353,44 +372,60 @@ class TestForwardIncomingMessage:
         ]
 
 
-class TestForwardReply:
+class TestProcessReply:
     @pytest.mark.asyncio
-    async def test_forward_reply_not_forwarded_message(
+    async def test_process_reply_not_to_forwarded_message_is_forwarded(
         self, mock_uow: InMemoryUnitOfWork
     ):
-        forwarded_message = ForwardedMessage(
-            forwarded_message_id=13,
-            target_chat_id=37,
-            origin_chat_id=42,
-        )
-        await mock_uow.forwarded_messages.add(forwarded_message)
+        target_chat = TargetChat(chat_id=10)
+        await mock_uow.target_chats.add(target_chat)
 
-        await services.forward_reply(
-            target_chat_id=1337,
-            forwarded_message_id=420,
-            reply_message_id=100,
+        await services.process_reply(
+            chat_id=13,
+            reply_to_message_id=37,
+            message_id=42,
         )
 
         assert not mock_uow.telegram_api.copied_messages
+        assert mock_uow.telegram_api.forwarded_messages == [
+            FakeForwardedMessage(
+                from_chat_id=13,
+                to_chat_id=target_chat.chat_id,
+                message_id=42
+            )
+        ]
 
     @pytest.mark.asyncio
-    async def test_forward_reply_success(self, mock_uow: InMemoryUnitOfWork):
-        forwarded_message_id = 13
+    async def test_process_reply_not_to_forwarded_message_no_target_chats(
+        self, mock_uow: InMemoryUnitOfWork
+    ):
+        await services.process_reply(
+            chat_id=13,
+            reply_to_message_id=37,
+            message_id=42,
+        )
+
+        assert not mock_uow.telegram_api.copied_messages
+        assert not mock_uow.telegram_api.forwarded_messages
+
+    @pytest.mark.asyncio
+    async def test_process_reply_success(self, mock_uow: InMemoryUnitOfWork):
         target_chat_id = 37
+        forwarded_message_id = 13
         origin_chat_id = 42
         reply_message_id = 100
 
         forwarded_message = ForwardedMessage(
-            forwarded_message_id=forwarded_message_id,
             target_chat_id=target_chat_id,
+            forwarded_message_id=forwarded_message_id,
             origin_chat_id=origin_chat_id,
         )
         await mock_uow.forwarded_messages.add(forwarded_message)
 
-        await services.forward_reply(
-            target_chat_id=target_chat_id,
-            forwarded_message_id=forwarded_message_id,
-            reply_message_id=reply_message_id,
+        await services.process_reply(
+            chat_id=target_chat_id,
+            message_id=reply_message_id,
+            reply_to_message_id=forwarded_message_id,
         )
 
         assert mock_uow.telegram_api.copied_messages == [

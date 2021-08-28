@@ -94,48 +94,67 @@ async def remove_group(
         await uow.commit()
 
 
+async def _forward_message_to_target_chat(
+    from_chat_id: int,
+    message_id: int,
+    uow: AbstractUnitOfWork,
+):
+    """Forwards message to latest target chat if one exists
+    and saves the forwarded message.
+    """
+    target_chat = await uow.target_chats.get_latest()
+    if not target_chat:
+        return
+    
+    forwarded_message_id = await uow.telegram_api.forward_message(
+        from_chat_id=from_chat_id,
+        to_chat_id=target_chat.chat_id,
+        message_id=message_id,
+    )
+    forwarded_message = ForwardedMessage(
+        forwarded_message_id=forwarded_message_id,
+        target_chat_id=target_chat.chat_id,
+        origin_chat_id=from_chat_id,
+    )
+    await uow.forwarded_messages.add(forwarded_message)
+    await uow.commit()
+
+
 @inject
-async def forward_incoming_message(
-    origin_chat_id: int,
+async def process_private_message(
+    chat_id: int,
     message_id: int,
     uow: AbstractUnitOfWork = Provide[Container.uow],
 ):
     async with uow:
-        target_chat = await uow.target_chats.get_latest()
-        if not target_chat:
-            return
-        
-        forwarded_message_id = await uow.telegram_api.forward_message(
-            from_chat_id=origin_chat_id,
-            to_chat_id=target_chat.chat_id,
+        await _forward_message_to_target_chat(
+            from_chat_id=chat_id,
             message_id=message_id,
+            uow=uow,
         )
-        forwarded_message = ForwardedMessage(
-            forwarded_message_id=forwarded_message_id,
-            target_chat_id=target_chat.chat_id,
-            origin_chat_id=origin_chat_id,
-        )
-        await uow.forwarded_messages.add(forwarded_message)
-        await uow.commit()
 
 
 @inject
-async def forward_reply(
-    target_chat_id: int,
-    forwarded_message_id: int,
-    reply_message_id: int,
+async def process_reply(
+    chat_id: int,
+    message_id: int,
+    reply_to_message_id: int,
     uow: AbstractUnitOfWork = Provide[Container.uow],
 ):
     async with uow:
         forwarded_message = await uow.forwarded_messages.get(
-            forwarded_message_id=forwarded_message_id,
-            target_chat_id=target_chat_id,
+            target_chat_id=chat_id,
+            forwarded_message_id=reply_to_message_id,
         )
-        if not forwarded_message:
-            return
-
-        await uow.telegram_api.copy_message(
-            from_chat_id=target_chat_id,
-            to_chat_id=forwarded_message.origin_chat_id,
-            message_id=reply_message_id,
-        )
+        if forwarded_message:
+            await uow.telegram_api.copy_message(
+                from_chat_id=chat_id,
+                to_chat_id=forwarded_message.origin_chat_id,
+                message_id=message_id,
+            )
+        else:
+            await _forward_message_to_target_chat(
+                from_chat_id=chat_id,
+                message_id=message_id,
+                uow=uow
+            )
