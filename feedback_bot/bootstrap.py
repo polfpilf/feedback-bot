@@ -1,4 +1,5 @@
 import aiogram
+import asyncpg
 from dependency_injector.providers import (
     Configuration,
     Factory,
@@ -30,5 +31,6 @@ class Container(DeclarativeContainer):
     pool = Resource(init_connection_pool, dsn=config.DATABASE_URL)
     uow: Provider[unit_of_work.AbstractUnitOfWork] = Factory(
         unit_of_work.PostgresUnitOfWork,
+        bot=bot,
         pool=pool
     )
