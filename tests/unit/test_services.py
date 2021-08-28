@@ -131,20 +131,22 @@ class InMemoryUnitOfWork(AbstractUnitOfWork):
         target_chats: Dict[int, TargetChat],
         forwarded_messages: Dict[Tuple[int, int], ForwardedMessage],
     ):
+        super().__init__()
+
         self.commited = False
         self.rolled_back = False
 
-        self.telegram_api = FakeTelegramAPI()
-        self.admin_repository = InMemoryAdminRepository(admins=admins, target_chats=target_chats)
-        self.target_chat_repository = InMemoryTargetChatRepository(target_chats=target_chats)
-        self.forwarded_message_repository = InMemoryForwardedMessageRepository(
+        self.admins = InMemoryAdminRepository(admins=admins, target_chats=target_chats)
+        self.target_chats = InMemoryTargetChatRepository(target_chats=target_chats)
+        self.forwarded_messages = InMemoryForwardedMessageRepository(
             forwarded_messages=forwarded_messages
         )
+        self.telegram_api = FakeTelegramAPI()
     
-    async def rollback(self):
+    async def _rollback(self):
         self.rolled_back = True
 
-    async def commit(self):
+    async def _commit(self):
         self.commited = True
 
 
@@ -180,7 +182,7 @@ class TestAuthenticateAdmin:
         
         await services.authenticate_admin(user_id=user_id, chat_id=13, token=token)
         
-        admin = await mock_uow.admin_repository.get(user_id)
+        admin = await mock_uow.admins.get(user_id)
         assert admin is None
         assert not mock_uow.telegram_api.sent_messages
 
@@ -196,7 +198,7 @@ class TestAuthenticateAdmin:
             user_id=user_id, chat_id=chat_id, token=token
         )
 
-        admin = await mock_uow.admin_repository.get(user_id)
+        admin = await mock_uow.admins.get(user_id)
         assert admin.user_id == user_id
         assert mock_uow.commited
         assert mock_uow.telegram_api.sent_messages == [
@@ -214,7 +216,7 @@ class TestAddGroup:
 
         await services.add_group(by_user_id=42, group_chat_id=group_chat_id)
 
-        target_chat = await mock_uow.target_chat_repository.get(group_chat_id)
+        target_chat = await mock_uow.target_chats.get(group_chat_id)
         assert target_chat is None
         assert not mock_uow.telegram_api.sent_messages
 
@@ -223,11 +225,11 @@ class TestAddGroup:
         group_chat_id = 1337
         added_by_user_id = 13
         admin = Admin(user_id=37, target_chat=TargetChat(chat_id=42))
-        await mock_uow.admin_repository.add(admin)
+        await mock_uow.admins.add(admin)
         
         await services.add_group(by_user_id=added_by_user_id, group_chat_id=group_chat_id)
 
-        target_chat = await mock_uow.target_chat_repository.get(group_chat_id)
+        target_chat = await mock_uow.target_chats.get(group_chat_id)
         assert target_chat is None
         assert not mock_uow.telegram_api.sent_messages
 
@@ -240,12 +242,12 @@ class TestAddGroup:
         admin_2_chat = TargetChat(chat_id=24)
         admin_1 = Admin(user_id=added_by_user_id, target_chat=admin_1_chat)
         admin_2 = Admin(user_id=420, target_chat=admin_2_chat)
-        await mock_uow.admin_repository.add(admin_1)
-        await mock_uow.admin_repository.add(admin_2)
+        await mock_uow.admins.add(admin_1)
+        await mock_uow.admins.add(admin_2)
 
         await services.add_group(by_user_id=added_by_user_id, group_chat_id=group_chat_id)
 
-        target_chat = await mock_uow.target_chat_repository.get(group_chat_id)
+        target_chat = await mock_uow.target_chats.get(group_chat_id)
         assert target_chat.chat_id == group_chat_id
         assert mock_uow.commited
 
@@ -262,11 +264,11 @@ class TestRemoveGroup:
         removed_group_chat_id = 13
 
         existing_target_chat = TargetChat(chat_id=37)
-        await mock_uow.target_chat_repository.add(existing_target_chat)
+        await mock_uow.target_chats.add(existing_target_chat)
 
         await services.remove_group(group_chat_id=removed_group_chat_id)
 
-        target_chat_after_remove = await mock_uow.target_chat_repository.get(
+        target_chat_after_remove = await mock_uow.target_chats.get(
             existing_target_chat.chat_id
         )
         assert target_chat_after_remove == existing_target_chat
@@ -277,18 +279,18 @@ class TestRemoveGroup:
     async def test_remove_group_success(self, mock_uow: InMemoryUnitOfWork):
         removed_group_chat_id = 13
         existing_target_chat = TargetChat(chat_id=removed_group_chat_id)
-        await mock_uow.target_chat_repository.add(existing_target_chat)
+        await mock_uow.target_chats.add(existing_target_chat)
 
         admin_1_chat = TargetChat(chat_id=42)
         admin_2_chat = TargetChat(chat_id=24)
         admin_1 = Admin(user_id=1337, target_chat=admin_1_chat)
         admin_2 = Admin(user_id=420, target_chat=admin_2_chat)
-        await mock_uow.admin_repository.add(admin_1)
-        await mock_uow.admin_repository.add(admin_2)
+        await mock_uow.admins.add(admin_1)
+        await mock_uow.admins.add(admin_2)
 
         await services.remove_group(group_chat_id=removed_group_chat_id)
 
-        target_chat_after_remove = await mock_uow.target_chat_repository.get(
+        target_chat_after_remove = await mock_uow.target_chats.get(
             removed_group_chat_id
         )
         assert target_chat_after_remove is None
@@ -309,7 +311,7 @@ class TestForwardIncomingMessage:
         await services.forward_incoming_message(origin_chat_id=13, message_id=37)
 
         assert not mock_uow.telegram_api.forwarded_messages
-        messages = await mock_uow.forwarded_message_repository.get_all()
+        messages = await mock_uow.forwarded_messages.get_all()
         assert not messages
 
     @pytest.mark.asyncio
@@ -322,14 +324,14 @@ class TestForwardIncomingMessage:
         # latest chat, should be selected as target
         target_chat_1 = TargetChat(chat_id=13, created_at=datetime(2021, 2, 2))
         target_chat_2 = TargetChat(chat_id=37, created_at=datetime(2020, 1, 1))
-        await mock_uow.target_chat_repository.add(target_chat_1)
-        await mock_uow.target_chat_repository.add(target_chat_2)
+        await mock_uow.target_chats.add(target_chat_1)
+        await mock_uow.target_chats.add(target_chat_2)
 
         await services.forward_incoming_message(
             origin_chat_id=origin_chat_id, message_id=message_id
         )
 
-        forwarded_message = await mock_uow.forwarded_message_repository.get(
+        forwarded_message = await mock_uow.forwarded_messages.get(
             forwarded_message_id=mock_uow.telegram_api.FAKE_FORWARDED_MESSAGE_ID,
             target_chat_id=target_chat_1.chat_id,
         )
@@ -361,7 +363,7 @@ class TestForwardReply:
             target_chat_id=37,
             origin_chat_id=42,
         )
-        await mock_uow.forwarded_message_repository.add(forwarded_message)
+        await mock_uow.forwarded_messages.add(forwarded_message)
 
         await services.forward_reply(
             target_chat_id=1337,
@@ -383,7 +385,7 @@ class TestForwardReply:
             target_chat_id=target_chat_id,
             origin_chat_id=origin_chat_id,
         )
-        await mock_uow.forwarded_message_repository.add(forwarded_message)
+        await mock_uow.forwarded_messages.add(forwarded_message)
 
         await services.forward_reply(
             target_chat_id=target_chat_id,
