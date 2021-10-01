@@ -9,7 +9,7 @@
   "repository": "https://github.com/polfpilf/feedback-bot",
   "buildpacks": [
     {
-      "url": "https://github.com/moneymeets/python-poetry-buildpack"
+      "url": "heroku/python"
     }
   ],
   "env": {
@@ -28,10 +28,6 @@
     "ADMIN_TOKEN": {
       "required": true,
       "description": "A secret token for admin authentication"
-    },
-    "DISABLE_POETRY_CREATE_RUNTIME_FILE": {
-      "description": "Do not change this unless you know what you're doing",
-      "value": "1"
     }
   },
   "addons": [
