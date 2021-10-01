@@ -9,7 +9,7 @@
   "repository": "https://github.com/polfpilf/feedback-bot",
   "buildpacks": [
     {
-      "url": "heroku/python"
+      "url": "https://github.com/moneymeets/python-poetry-buildpack"
     }
   ],
   "env": {
