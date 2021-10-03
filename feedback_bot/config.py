@@ -3,7 +3,7 @@ from dynaconf import Dynaconf, Validator
 
 settings = Dynaconf(
     settings_files=["settings.toml", ".secrets.toml"],
-    envvar_prefix="",
+    envvar_prefix=False,
     validators=[
         Validator("TELEGRAM_BOT_TOKEN", must_exist=True, is_type_of=str, len_min=1),
         Validator(
