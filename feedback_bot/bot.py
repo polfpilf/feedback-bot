@@ -116,6 +116,9 @@ async def set_webhook(
     webhook_host: str = Provide[Container.config.TELEGRAM_WEBHOOK_HOST],
     webhook_path: str = Provide[Container.config.TELEGRAM_WEBHOOK_PATH]
 ):
+    if not webhook_path.startswith("/"):
+        webhook_path = "/" + webhook_path
+
     webhook_url = f"{webhook_host}{webhook_path}"
     await dp.bot.set_webhook(webhook_url)
 
