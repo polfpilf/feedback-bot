@@ -34,5 +34,3 @@ settings = Dynaconf(
 )
 
 settings.validators.validate()
-
-print(settings.as_dict())
