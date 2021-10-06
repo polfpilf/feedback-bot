@@ -10,7 +10,7 @@ def _normalize_database_url(settings: LazySettings, validator: Validator):
     if url.startswith(deprecated_schema):
         url = url.replace(deprecated_schema, new_schema, 1)
     
-    return url
+    settings.DATABASE_URL = url
 
 
 settings = Dynaconf(
@@ -34,3 +34,5 @@ settings = Dynaconf(
 )
 
 settings.validators.validate()
+
+print(settings.as_dict())
