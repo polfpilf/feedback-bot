@@ -1,8 +1,8 @@
-from dynaconf import Dynaconf, Validator
+from dynaconf import Dynaconf, LazySettings, Validator
 
 
-def _normalize_database_url(url: str) -> str:
-    url = url.strip()
+def _normalize_database_url(settings: LazySettings, validator: Validator):
+    url: str = settings.DATABASE_URL
 
     deprecated_schema = "postgres://"
     new_schema = "postgresql://"
@@ -28,9 +28,9 @@ settings = Dynaconf(
             must_exist=True,
             is_type_of=str,
             len_min=1,
-            cast=_normalize_database_url,
+            default=_normalize_database_url,
         ),
-    ]
+    ],
 )
 
 settings.validators.validate()
