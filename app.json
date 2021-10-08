@@ -10,6 +10,9 @@
   "buildpacks": [
     {
       "url": "https://github.com/moneymeets/python-poetry-buildpack"
+    },
+    {
+      "url": "heroku/python"
     }
   ],
   "env": {
