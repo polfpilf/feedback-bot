@@ -1,7 +1,9 @@
 host = "127.0.0.1"
 port = 3000
-telegram_bot_token = "" # define in .secrets.toml
-telegram_webhook_host = "" # define in .secrets.toml
-telegram_webhook_path = "" # define in .secrets.toml
-admin_token = "" # define in .secrets.toml
-database_url = "" # define in .secrets.toml
+# The following settings should be specified either in .secrets.toml file
+# or provided as environment variables:
+# telegram_bot_token = "" # Bot token provided by @BotFather
+# telegram_webhook_host = "" # Host of the server on which the bot is deployed
+# telegram_webhook_path = "" # Endpoint path for Telegram to POST updates to
+# admin_token = "" # Bot administrator token (password)
+# database_url = "" # URL of the bot database
