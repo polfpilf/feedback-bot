@@ -2,13 +2,10 @@
 
 Telegram feedback bot.
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
-
-
 ## Usage
-Register a new bot using Telegram's [@BotFather](https://t.me/botfather). Copy the provided token to `telegram_bot_token` configuration option.
+Register a new bot using Telegram's [@BotFather](https://t.me/botfather). Copy the provided token to `telegram_bot_token` configuration option and start the bot.
 
-After deploying the bot, authenticate yourself as an Admin by sending the `auth` command to your new bot:
+After starting the bot, authenticate yourself as an Admin by sending the `auth` command to your new bot:
 ```
 You: /auth <admin-token>
 Bot: Auth token successfully verified
@@ -28,3 +25,8 @@ or by adding a `.secrets.toml` file into the project root directory (adviced for
 Alternatively configuration can be specified using environment variables.
 
 Configuration fields are described in the [settings.toml](settings.toml) file.
+
+## Deploying to Heroku
+Use the button below to deploy the bot:
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
