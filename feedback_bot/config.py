@@ -13,6 +13,15 @@ def _normalize_database_url(settings: LazySettings, validator: Validator):
     settings.DATABASE_URL = url
 
 
+def _normalize_webhook_path(settings: LazySettings, validator: Validator):
+    webhook_path: str = settings.TELEGRAM_WEBHOOK_PATH
+    
+    if not webhook_path.startswith("/"):
+        webhook_path = "/" + webhook_path
+
+    settings.TELEGRAM_WEBHOOK_PATH = webhook_path
+
+
 settings = Dynaconf(
     settings_files=["settings.toml", ".secrets.toml"],
     envvar_prefix=False,
