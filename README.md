@@ -2,13 +2,16 @@
 
 Telegram feedback bot.
 
+*Read this in [Russian](README.ru.md).*
+
 ## Usage
 Register a new bot using Telegram's [@BotFather](https://t.me/botfather).
 Copy the provided token to `telegram_bot_token` configuration option
 and start the bot.
 
 After starting the bot, authenticate yourself as an Admin
-by sending the `auth` command to your new bot:
+by sending the `auth` command and the `admin_token` configuration option
+to your new bot:
 ```
 You: /auth <admin-token>
 Bot: Auth token successfully verified
