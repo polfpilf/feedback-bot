@@ -27,7 +27,7 @@
 [Privacy Mode](https://core.telegram.org/bots#privacy-mode).
 Это можно сделать с помощью [@BotFather](https://t.me/botfather).
 
-## Найстрока бота
+## Найстрока
 Настройка бота может быть выполнена с помощью изменения файла
 [settings.toml](settings.toml) или с помощью добавления файла `.secrets.toml`
 в корневую директорию проекта (рекомендуется для локального запуска).
