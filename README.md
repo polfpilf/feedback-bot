@@ -10,7 +10,7 @@ Copy the provided token to `telegram_bot_token` configuration option
 and start the bot.
 
 After starting the bot, authenticate yourself as an Admin
-by sending the `auth` command and the `admin_token` configuration option
+by sending the `auth` command and the `admin_token` option value
 to your new bot:
 ```
 You: /auth <admin-token>
