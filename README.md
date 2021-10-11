@@ -42,7 +42,8 @@ The bot requires PostgreSQL 13 for data storage.
 ### Options:
 * `host` - host for incoming connections (default `127.0.0.1`);
 * `port` - port number for incoming connections (default `3000`);
-* `telegram_bot_token` - required, bot token provided by @BotFather;
+* `telegram_bot_token` - required, bot token provided by
+  [@BotFather](https://t.me/botfather);
 * `telegram_webhook_host` - required,
   host of the URL for Telegram-sent updates;
 * `telegram_webhook_path` - required,
