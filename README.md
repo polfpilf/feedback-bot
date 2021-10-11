@@ -37,9 +37,23 @@ or by adding a `.secrets.toml` file into the project root directory
 (advised for local setup). Alternatively configuration can be specified
 using environment variables.
 
-Configuration fields are described in the [settings.toml](settings.toml) file.
+The bot requires PostgreSQL 13 for data storage.
+
+### Options:
+* `host` - host for incoming connections (default `127.0.0.1`);
+* `port` - port number for incoming connections (default `3000`);
+* `telegram_bot_token` - required, bot token provided by @BotFather;
+* `telegram_webhook_host` - required,
+  host of the URL for Telegram-sent updates;
+* `telegram_webhook_path` - required,
+  path of the URL for Telegram-sent updates;
+* `database_url` - URL of the database (details about the format can be found
+  [here](https://www.postgresql.org/docs/13/libpq-connect.html#id-1.7.3.8.3.6));
+* `admin_token` - bot Administrator token (password).
+
+Environment variable names for options can be uppercase.
 
 ## Deploying to Heroku
-Use the button below to deploy the bot:
+Use the button below to deploy the bot in one click:
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
