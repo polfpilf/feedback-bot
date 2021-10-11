@@ -19,8 +19,9 @@ Bot: Auth token successfully verified
 
 After that all messages from other users to the bot will be forwarded
 to the Admins. The Admins can send messages to users by replying
-to the forwarded messages. Admin profiles will not be visible to the users
-and messages will look as if they were sent by the bot itself.
+to the forwarded messages (press on the message and select "Reply").
+Admin profiles will not be visible to the users and messages will look
+as if they were sent by the bot itself.
 
 Bot can forward messages to and from group chats.
 For that an authenticated Admin has to add the bot to the target group.
@@ -33,7 +34,7 @@ This can be done via [@BotFather](https://t.me/botfather).
 ## Configuration
 Bot can be configured by editing the [settings.toml](settings.toml)
 or by adding a `.secrets.toml` file into the project root directory
-(adviced for local setup). Alternatively configuration can be specified
+(advised for local setup). Alternatively configuration can be specified
 using environment variables.
 
 Configuration fields are described in the [settings.toml](settings.toml) file.
