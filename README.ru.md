@@ -27,6 +27,11 @@
 [Privacy Mode](https://core.telegram.org/bots#privacy-mode).
 Это можно сделать с помощью [@BotFather](https://t.me/botfather).
 
+## Зависимости:
+* Python 3.9+;
+* Poetry;
+* PostgreSQL 13.
+
 ## Настройка
 Для хранения данных требуется PostgreSQL 13.
 

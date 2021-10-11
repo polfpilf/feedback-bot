@@ -31,13 +31,16 @@ To allow group members to reply to the forwarded messages
 [Privacy Mode](https://core.telegram.org/bots#privacy-mode) has to be disabled.
 This can be done via [@BotFather](https://t.me/botfather).
 
+## Dependencies:
+* Python 3.9+;
+* Poetry;
+* PostgreSQL 13.
+
 ## Configuration
 Bot can be configured by editing the [settings.toml](settings.toml)
 or by adding a `.secrets.toml` file into the project root directory
 (advised for local setup). Alternatively configuration can be specified
 using environment variables.
-
-The bot requires PostgreSQL 13 for data storage.
 
 ### Options:
 * `host` - host for incoming connections (default `127.0.0.1`);
