@@ -61,3 +61,22 @@ Environment variable names for options can be uppercase.
 Use the button below to deploy the bot in one click:
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+
+### Applying updates
+1. Install [git](https://git-scm.com/downloads) and configure
+[heroku-cli](https://devcenter.heroku.com/articles/heroku-cli).
+2. Clone the repository:
+    ```
+    git clone https://github.com/polfpilf/feedback-bot.git
+    ```
+    If the repository was cloned previously,
+    execute the following command in the local repository folder:
+    ```
+    git pull origin
+    ```
+3. Add heroku remote to your local repository
+([instructions](https://devcenter.heroku.com/articles/git#for-an-existing-heroku-app)).
+4. Push the updated bot version to heroku repository:
+    ```
+    git push heroku master
+    ```

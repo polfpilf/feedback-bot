@@ -60,3 +60,22 @@
 Используйте кнопку ниже, чтобы запустить бот в один клик:
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+
+### Применение обновлений
+1. Установите [git](https://git-scm.com/downloads) и настройте
+[heroku-cli](https://devcenter.heroku.com/articles/heroku-cli).
+2. Клонируйте репозиторий:
+    ```
+    git clone https://github.com/polfpilf/feedback-bot.git
+    ```
+    Если репозиторий был клонирован ранее, выполните следующую команду
+    в директории с локальным репозиторием:
+    ```
+    git pull origin
+    ```
+3. Добавьте удалённый репозиторий heroku в настройки локального репозитория
+([инструкция](https://devcenter.heroku.com/articles/git#for-an-existing-heroku-app)).
+4. Отправьте обновлённую версию бота в репозиторий heroku:
+    ```
+    git push heroku master
+    ```
