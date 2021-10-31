@@ -17,6 +17,9 @@ You: /auth <admin-token>
 Bot: Auth token successfully verified
 ```
 
+**Note**: it is recommended to remove the message with the token
+after successful authentication.
+
 After that all messages from other users to the bot will be forwarded
 to the Admins. The Admins can send messages to users by replying
 to the forwarded messages (press on the message and select "Reply").
