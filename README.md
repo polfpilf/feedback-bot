@@ -17,7 +17,7 @@ You: /auth <admin-token>
 Bot: Auth token successfully verified
 ```
 
-**Note**: it is recommended to remove the message with the token
+**Note:** it is recommended to remove the message with the token
 after successful authentication.
 
 After that all messages from other users to the bot will be forwarded
@@ -64,6 +64,18 @@ Environment variable names for options can be uppercase.
 Use the button below to deploy the bot in one click:
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+
+**Warning:** Hobby Dev plan for
+[Heroku Postgres addon](https://elements.heroku.com/addons/heroku-postgresql)
+is used by default. This plan has limited storage capacity.
+If the storage limits have been encountered, either the addon plan can be upgraded
+or forwarded messages can be removed by running the following query
+(use [heroku-cli](https://devcenter.heroku.com/articles/heroku-postgresql#pg-psql)
+to connect to the database):
+
+```sql
+DELETE FROM forwarded_message;
+```
 
 ### Applying updates
 1. Install [git](https://git-scm.com/downloads) and configure
