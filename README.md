@@ -69,12 +69,13 @@ Use the button below to deploy the bot in one click:
 [Heroku Postgres addon](https://elements.heroku.com/addons/heroku-postgresql)
 is used by default. This plan has limited storage capacity.
 If the storage limits have been encountered, either the addon plan can be upgraded
-or forwarded messages can be removed by running the following query
+or old forwarded messages can be removed by running the following query
 (use [heroku-cli](https://devcenter.heroku.com/articles/heroku-postgresql#pg-psql)
 to connect to the database):
 
 ```sql
-DELETE FROM forwarded_message;
+-- remove forwarded messages received before 2021-01-01
+DELETE FROM forwarded_message WHERE created_at < '2021-01-01';
 ```
 
 ### Applying updates

@@ -41,3 +41,4 @@ class ForwardedMessage:
     forwarded_message_id: int
     target_chat_id: int
     origin_chat_id: int = field(hash=False, compare=False)
+    created_at: datetime = field(hash=False, compare=False, default_factory=_utc_now)

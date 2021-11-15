@@ -36,7 +36,7 @@ class TestPostgresAdminRepository:
         admin = await admin_repository.get(user_id=42)
 
         assert admin.user_id == 42
-        
+
         assert admin.target_chat.chat_id == 13
         assert admin.target_chat.created_at == datetime(2021, 1, 1, tzinfo=timezone.utc)
 
@@ -182,7 +182,7 @@ class TestPostgresTargetChatRepository:
         latest_target_chat = await target_chat_repository.get_latest()
 
         assert latest_target_chat is None
-    
+
     @pytest.mark.asyncio
     async def test_target_chat_repository_remove(
         self, db_connection: asyncpg.Connection
@@ -219,7 +219,7 @@ class TestPostgresTargetChatRepository:
             chat_id=42,
             created_at=datetime(2021, 1, 1, tzinfo=timezone.utc),
         )
-        
+
         target_chat_repository = PostgresTargetChatRepository(db_connection)
         await target_chat_repository.add(target_chat)
 
@@ -245,17 +245,23 @@ class TestPostgresForwardedMessageRepository:
         forwarded_message_id = 42
         target_chat_id = 24
         origin_chat_id = 13
+        created_at = datetime(year=2021, month=1, day=1, tzinfo=timezone.utc)
 
         await db_connection.executemany(
             """
             INSERT INTO forwarded_message
-                (forwarded_message_id, target_chat_id, origin_chat_id)
-            VALUES ($1, $2, $3)
+                (
+                    forwarded_message_id,
+                    target_chat_id,
+                    origin_chat_id,
+                    created_at
+                )
+            VALUES ($1, $2, $3, $4)
             """,
             [
-                (13, 37, 20),
-                (forwarded_message_id, target_chat_id, origin_chat_id),
-                (42, 42, 42),
+                (13, 37, 20, datetime(year=2020, month=1, day=2)),
+                (forwarded_message_id, target_chat_id, origin_chat_id, created_at),
+                (42, 42, 42, datetime(year=2020, month=2, day=3)),
             ]
         )
 
@@ -270,6 +276,7 @@ class TestPostgresForwardedMessageRepository:
         assert forwarded_message.forwarded_message_id == forwarded_message_id
         assert forwarded_message.target_chat_id == target_chat_id
         assert forwarded_message.origin_chat_id == origin_chat_id
+        assert forwarded_message.created_at == created_at
 
     @pytest.mark.asyncio
     async def test_forwarded_message_repository_get_not_found(
@@ -284,13 +291,16 @@ class TestPostgresForwardedMessageRepository:
         )
 
         assert forwarded_message is None
-    
+
     @pytest.mark.asyncio
     async def test_forwarded_message_repository_add(
         self, db_connection: asyncpg.Connection
     ):
         forwarded_message = ForwardedMessage(
-            forwarded_message_id=13, target_chat_id=37, origin_chat_id=42
+            forwarded_message_id=13,
+            target_chat_id=37,
+            origin_chat_id=42,
+            created_at=datetime(year=2021, month=1, day=1, tzinfo=timezone.utc),
         )
 
         forwarded_message_repository = PostgresForwardedMessageRepository(
@@ -303,7 +313,8 @@ class TestPostgresForwardedMessageRepository:
             SELECT
                 forwarded_message_id,
                 target_chat_id,
-                origin_chat_id
+                origin_chat_id,
+                created_at
             FROM
                 forwarded_message
             WHERE
@@ -324,4 +335,8 @@ class TestPostgresForwardedMessageRepository:
         assert (
             forwarded_message_row["origin_chat_id"]
             == forwarded_message.origin_chat_id
+        )
+        assert (
+            forwarded_message_row["created_at"]
+            == forwarded_message.created_at
         )

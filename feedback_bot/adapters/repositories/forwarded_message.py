@@ -30,7 +30,8 @@ class PostgresForwardedMessageRepository(AbstractForwardedMessageRepository):
             SELECT
                 forwarded_message_id,
                 target_chat_id,
-                origin_chat_id
+                origin_chat_id,
+                created_at
             FROM
                 forwarded_message
             WHERE
@@ -42,17 +43,22 @@ class PostgresForwardedMessageRepository(AbstractForwardedMessageRepository):
         )
         if not row:
             return None
-        
+
         return ForwardedMessage(**row)
-    
+
     async def add(self, forwarded_message: ForwardedMessage):
         await self._conn.execute(
             """
-            INSERT INTO forwarded_message
-                (forwarded_message_id, target_chat_id, origin_chat_id)
-            VALUES ($1, $2, $3)
+            INSERT INTO forwarded_message (
+                forwarded_message_id,
+                target_chat_id,
+                origin_chat_id,
+                created_at
+            )
+            VALUES ($1, $2, $3, $4)
             """,
             forwarded_message.forwarded_message_id,
             forwarded_message.target_chat_id,
             forwarded_message.origin_chat_id,
+            forwarded_message.created_at,
         )
